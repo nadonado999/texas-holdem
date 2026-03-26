@@ -207,14 +207,22 @@ class Game:
         print(f'\n  {self.player.name}の役: {player_result.name}')
         print(f'  {self.cpu.name}の役:  {cpu_result.name}')
 
-        if player_result.rank > cpu_result.rank:
+        # 役で決定。同役の場合はタイブレーカーで決定する
+        if player_result.rank != cpu_result.rank:
+            player_wins = player_result.rank > cpu_result.rank
+        elif player_result.tiebreaker != cpu_result.tiebreaker:
+            player_wins = player_result.tiebreaker > cpu_result.tiebreaker
+        else:
+            player_wins = None  # 真の引き分け（同役・同キッカー）
+
+        if player_wins is True:
             self.player.chips += self.pot
             print(f'\n{self.player.name}の勝ち！ {self.pot} チップ獲得')
-        elif cpu_result.rank > player_result.rank:
+        elif player_wins is False:
             self.cpu.chips += self.pot
             print(f'\n{self.cpu.name}の勝ち！ {self.pot} チップ獲得')
         else:
-            # 同役は引き分け。端数は切り捨て
+            # 真の引き分け。端数は切り捨て
             half = self.pot // 2
             self.player.chips += half
             self.cpu.chips += half

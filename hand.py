@@ -42,19 +42,68 @@ class HandResult:
     rank: HandRank
     name: str
     best_cards: list[Card]
+    tiebreaker: tuple[int, ...]  # 同役時の比較キー（役ごとに異なる数値タプル）
 
 
 def evaluate(cards: list[Card]) -> HandResult:
     """7枚のカードから最強の5枚の組み合わせを選び、役を判定して返す。"""
     # C(7,5) = 21通りの組み合わせの中から最高スコアのものを選ぶ
     best_five = max(combinations(cards, 5), key=_score_five)
-    rank = _classify(list(best_five))
-    return HandResult(rank=rank, name=_HAND_NAMES[rank], best_cards=list(best_five))
+    five = list(best_five)
+    rank = _classify(five)
+    tiebreaker = _compute_tiebreaker(five, rank)
+    return HandResult(rank=rank, name=_HAND_NAMES[rank], best_cards=five, tiebreaker=tiebreaker)
 
 
-def _score_five(five: tuple[Card, ...]) -> int:
-    """5枚の組み合わせを数値スコアに変換する。スコアが大きいほど強い。"""
-    return _classify(list(five)).value
+def _score_five(five: tuple[Card, ...]) -> tuple[int, ...]:
+    """5枚の組み合わせを比較用タプルに変換する。タプルのレキシコグラフィカル順で強さを比較できる。"""
+    five_list = list(five)
+    rank = _classify(five_list)
+    return (rank.value, *_compute_tiebreaker(five_list, rank))
+
+
+def _compute_tiebreaker(five: list[Card], rank: HandRank) -> tuple[int, ...]:
+    """役に応じた同役比較用の数値タプルを返す。値が大きいほど強い。"""
+    counts = _rank_counts(five)
+    sorted_values = sorted([c.rank_value for c in five], reverse=True)
+
+    if rank == HandRank.ROYAL_FLUSH:
+        # ロイヤルフラッシュは常に同点
+        return ()
+
+    if rank in (HandRank.STRAIGHT_FLUSH, HandRank.STRAIGHT):
+        # ストレートはホイール（最高位=5）を含めてストレート最高位で比較する
+        high = _straight_high(five)
+        return (high,)  # type: ignore[arg-type]
+
+    if rank == HandRank.FOUR_OF_A_KIND:
+        four_rank = next(v for v, cnt in counts.items() if cnt == 4)
+        kicker = next(v for v, cnt in counts.items() if cnt == 1)
+        return (four_rank, kicker)
+
+    if rank == HandRank.FULL_HOUSE:
+        three_rank = next(v for v, cnt in counts.items() if cnt == 3)
+        pair_rank = next(v for v, cnt in counts.items() if cnt == 2)
+        return (three_rank, pair_rank)
+
+    if rank in (HandRank.FLUSH, HandRank.HIGH_CARD):
+        # 降順5枚をそのまま比較キーにする
+        return tuple(sorted_values)
+
+    if rank == HandRank.THREE_OF_A_KIND:
+        three_rank = next(v for v, cnt in counts.items() if cnt == 3)
+        kickers = sorted([v for v, cnt in counts.items() if cnt == 1], reverse=True)
+        return (three_rank, *kickers)
+
+    if rank == HandRank.TWO_PAIR:
+        pairs = sorted([v for v, cnt in counts.items() if cnt == 2], reverse=True)
+        kicker = next(v for v, cnt in counts.items() if cnt == 1)
+        return (*pairs, kicker)
+
+    # ONE_PAIR
+    pair_rank = next(v for v, cnt in counts.items() if cnt == 2)
+    kickers = sorted([v for v, cnt in counts.items() if cnt == 1], reverse=True)
+    return (pair_rank, *kickers)
 
 
 def _classify(five: list[Card]) -> HandRank:
