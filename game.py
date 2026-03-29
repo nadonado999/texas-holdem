@@ -124,6 +124,12 @@ class Game:
         elif action == 'raise':
             # レイズ額はCPUの残りチップの範囲でランダムに決定する
             max_raise = self.cpu.chips - call_amount
+            # レイズ余力がない場合はコールに切り替える（防御的ガード）
+            if max_raise <= 0:
+                self.cpu.bet(call_amount)
+                self.pot += call_amount
+                print(f'  {self.cpu.name}: コール（{call_amount} チップ）')
+                return
             raise_amount = random.randint(1, max(1, max_raise // 2))
             total = call_amount + raise_amount
             self.cpu.bet(total)
@@ -177,9 +183,13 @@ class Game:
             return 'fold'
         # ベットされている場合はチェックを選択肢から除外する
         if call_amount > 0:
+            # コールでチップが尽きる場合はレイズ不可
+            if call_amount >= self.cpu.chips:
+                return random.choice(['call', 'fold'])
             return random.choice(['call', 'raise', 'fold'])
         else:
-            return random.choice(['check', 'raise', 'fold'])
+            # ベットがない場合はフォールドを除外する（コストゼロで降りるのは不自然）
+            return random.choice(['check', 'raise'])
 
     def _showdown(self) -> None:
         """役を比較して勝者を決定し、ポットを分配する。"""

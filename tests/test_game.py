@@ -180,3 +180,22 @@ def test_player_call_deducts_chips(monkeypatch, game: Game) -> None:
     monkeypatch.setattr('builtins.input', lambda _: '2')
     game._betting_round()
     assert game.player.chips == chips_before - 10
+
+
+# --- _cpu_action() のアクション選択ガード ---
+
+def test_cpu_action_no_raise_when_chips_equal_call(game: Game) -> None:
+    """CPUのチップがコール額と同じときは raise が返らないこと。"""
+    game.current_bet = 100
+    game.cpu.current_bet = 0
+    game.cpu.chips = 100  # call_amount(100) == chips(100) → レイズ不可
+    results = {game._cpu_action() for _ in range(200)}
+    assert 'raise' not in results
+
+
+def test_cpu_action_no_fold_when_no_bet(game: Game) -> None:
+    """call_amount == 0 のときは fold が返らないこと。"""
+    game.current_bet = 0
+    game.cpu.current_bet = 0
+    results = {game._cpu_action() for _ in range(200)}
+    assert 'fold' not in results
