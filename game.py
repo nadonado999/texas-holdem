@@ -13,9 +13,9 @@ BIG_BLIND = 20     # ビッグブラインド額（CPU固定）
 class Game:
     """ゲーム進行全体を管理するクラス。"""
 
-    def __init__(self) -> None:
-        self.player = Player('あなた')
-        self.cpu = Player('CPU', is_cpu=True)
+    def __init__(self, player: Player, cpu: Player) -> None:
+        self.player = player
+        self.cpu = cpu
         self.deck = Deck()
         self.community_cards: list[Card] = []
         self.pot: int = 0
@@ -23,10 +23,6 @@ class Game:
 
     def start(self) -> None:
         """ゲームを開始し、1ラウンドを進行する。"""
-        print('=' * 40)
-        print('  テキサスホールデムポーカー')
-        print('=' * 40)
-
         # ブラインド投票・手札配布
         self._post_blinds()
         self._deal_hole_cards()

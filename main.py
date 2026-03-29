@@ -1,12 +1,12 @@
-# main.py - エントリーポイント。ゲームを生成して開始する
+# main.py - エントリーポイント。ゲームセッションを生成して開始する
 
-from game import Game
+from game_session import GameSession
 
 
 def main() -> None:
-    """ゲームを生成して1ラウンドを開始する。"""
-    game = Game()
-    game.start()
+    """ゲームセッションを生成して開始する。"""
+    session = GameSession()
+    session.run()
 
 
 if __name__ == '__main__':

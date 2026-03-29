@@ -25,3 +25,9 @@ class Player:
     def reset_bet(self) -> None:
         """ベッティングラウンド開始時にベット額をリセットする。"""
         self.current_bet = 0
+
+    def reset_round(self) -> None:
+        """ラウンド開始時に手札・ベット・フォールド状態をリセットする。"""
+        self.hole_cards = []
+        self.is_folded = False
+        self.reset_bet()

@@ -9,6 +9,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 import pytest
 from card import Card
 from game import Game, BIG_BLIND, SMALL_BLIND
+from player import Player
 
 
 # --- フィクスチャ ---
@@ -16,7 +17,7 @@ from game import Game, BIG_BLIND, SMALL_BLIND
 @pytest.fixture
 def game() -> Game:
     """テスト用の Game インスタンスを返す。"""
-    return Game()
+    return Game(Player('あなた'), Player('CPU', is_cpu=True))
 
 
 # --- ブラインド投票 ---

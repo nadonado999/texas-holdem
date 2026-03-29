@@ -101,3 +101,35 @@ def test_reset_bet_does_not_change_chips(player: Player) -> None:
     chips_after_bet = player.chips
     player.reset_bet()
     assert player.chips == chips_after_bet
+
+
+# --- reset_round() メソッド ---
+
+def test_reset_round_clears_hole_cards(player: Player) -> None:
+    """reset_round() 後に hole_cards が空になること。"""
+    from card import Card
+    player.hole_cards = [Card('♠', 'A'), Card('♥', 'K')]
+    player.reset_round()
+    assert player.hole_cards == []
+
+
+def test_reset_round_clears_is_folded(player: Player) -> None:
+    """reset_round() 後に is_folded が False になること。"""
+    player.is_folded = True
+    player.reset_round()
+    assert player.is_folded is False
+
+
+def test_reset_round_clears_current_bet(player: Player) -> None:
+    """reset_round() 後に current_bet が 0 になること。"""
+    player.bet(100)
+    player.reset_round()
+    assert player.current_bet == 0
+
+
+def test_reset_round_does_not_change_chips(player: Player) -> None:
+    """reset_round() 後にチップは変化しないこと。"""
+    player.bet(100)
+    chips_after_bet = player.chips
+    player.reset_round()
+    assert player.chips == chips_after_bet
